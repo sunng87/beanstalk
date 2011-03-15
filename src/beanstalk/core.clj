@@ -97,6 +97,7 @@
   (read [this]  "Read from beanstalk")
   (write [this msg] "Write msg to beanstalk")
   (stats [this] "stats command")
+  (stats-tube [this tube] "stats-tube command")
   (put [this pri del ttr length data] "put command")
   (use [this tube] "use command for producers")
   (watch [this tube] "watch command for consumers")
@@ -123,6 +124,12 @@
                   (protocol-case 
                     this 
                     (beanstalk-cmd :stats) 
+                    :ok 
+                    (fn [b r] {:payload (.read b)})))
+            (stats-tube [this tube] 
+                  (protocol-case 
+                    this 
+                    (beanstalk-cmd :stats-tube tube) 
                     :ok 
                     (fn [b r] {:payload (.read b)})))
            (put [this pri del ttr length data] 
