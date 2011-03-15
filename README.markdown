@@ -7,11 +7,13 @@ Refactored by bengl3rt
 ## Usage
 
     ; producer
+	user=> (use 'beanstalk.core)
     user=> (def b (new-beanstalk))
     user=> (use b "my-tube")
     user=> (put b 0 0 0 5 "hello")
     ...
     ; consumer
+	user=> (use 'beanstalk.core)
     user=> (def b (new-beanstalk))
     user=> (watch b "my-tube")
     user=> (def job (reserve b)) ; id is (:id job), payload is (:payload job)
