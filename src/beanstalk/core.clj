@@ -92,7 +92,7 @@
      (protocol-case beanstalk expected handle-response))))
 
 
-(defprotocol BeanstalkObject
+(defprotocol bso
   (close [this] "Close the connection")
   (read [this]  "Read from beanstalk")
   (write [this msg] "Write msg to beanstalk")
@@ -116,7 +116,7 @@
 
 
 (deftype Beanstalk [socket reader writer]
-           BeanstalkObject
+           bso
            (close [this] (.close socket))
            (read [this] (stream-read reader))
            (write [this msg] (stream-write writer msg))

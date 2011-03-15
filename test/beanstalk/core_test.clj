@@ -15,6 +15,15 @@
                  result (.stats b)]
              (is (not (nil? (:payload result))))
              (is (> (.length (:payload result)) 0)))))
+             
+             
+(deftest test-stats-tube
+      (binding [ beanstalk.core/*debug* true ]
+        (let [b (new-beanstalk)
+              use-b (.use b "test-tube")
+              result (.stats-tube b "test-tube")]
+          (is (not (nil? (:payload result))))
+          (is (> (.length (:payload result)) 0)))))
 
 
 (deftest test-put
