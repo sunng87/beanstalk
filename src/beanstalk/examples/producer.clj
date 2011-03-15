@@ -24,12 +24,12 @@
 
                      (println (str "Using host " host " port " port " and tube " tube))
 
-                     (with-open [b (new-beanstalk host port)]
-                       (let [ret (.use b tube)]
+                       (let [b (new-beanstalk host port)
+                           ret (use b tube)]
                          (if ret
                            (loop [count (Integer. iterations)]
                              (when (> count 0)
-                               (.put b 0 0 0 (.length message) message)
+                               (put b 0 0 0 (.length message) message)
                              (recur (dec count))))
-                           (println (str "Error, watch failed: " ret)))))))
+                           (println (str "Error, watch failed: " ret))))))
 

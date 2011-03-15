@@ -2,23 +2,22 @@
 
 A native clojure [beanstalkd](http://kr.github.com/beanstalkd/) client library. 
 Some inspiration and ideas were taken from [cl-beanstalk](https://github.com/antifuchs/cl-beanstalk/).
+Refactored by bengl3rt
 
 ## Usage
 
-The beanstalk client uses deftype and a protocol declaration to create a simple 
-(socket, reader, writer) tuple. The protocol defines methods that are direct 
-mappings to the [beanstalk protocol commands](https://github.com/kr/beanstalkd/blob/v1.3/doc/protocol.txt). 
-For example: 
-
     ; producer
     user=> (def b (new-beanstalk))
-    user=> (.use b "my-tube")
-    user=> (.put b 0 0 0 5 "hello")
+    user=> (use b "my-tube")
+    user=> (put b 0 0 0 5 "hello")
     ...
     ; consumer
     user=> (def b (new-beanstalk))
-    user=> (.watch b "my-tube")
-    user=> (def job (.reserve b)) ; id is (:id job), payload is (:payload job)
+    user=> (watch b "my-tube")
+    user=> (def job (reserve b)) ; id is (:id job), payload is (:payload job)
+
+## Installation
+	[org.clojars.bengl3rt/beanstalk "1.0.2"]
 
 ## Examples
 

@@ -22,14 +22,14 @@
 
                      (println (str "Using host " host " port " port " and tube " tube))
 
-                     (with-open [b (new-beanstalk host port)]
-                       (let [ret (.watch b tube)]
+                       (let [b (new-beanstalk host port)
+                           ret (watch b tube)]
                          (if ret
-                           (loop [job (.reserve b)]
+                           (loop [job (reserve b)]
                              (if (not (= (:payload job) "exit"))
                                (do
                                  (println "=> " (:payload job))
-                                 (.delete b (:id job))
-                                 (recur (.reserve b)))
+                                 (delete b (:id job))
+                                 (recur (reserve b)))
                                (println "Exiting.")))
-                           (println (str "Error, watch failed: " ret)))))))
+                           (println (str "Error, watch failed: " ret))))))
