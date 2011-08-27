@@ -19,7 +19,7 @@ Refactored by bengl3rt
     user=> (def job (reserve b)) ; id is (:id job), payload is (:payload job)
 
 ## Installation
-	[org.clojars.bengl3rt/beanstalk "1.0.2"]
+	[org.clojars.sunng/beanstalk "1.0.4"]
 
 ## Examples
 
