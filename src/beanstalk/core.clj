@@ -78,137 +78,174 @@
            :message (str "Unexpected response from sever: " (:response reply)))))
 
 
-           (defn close [this] (.close (:socket this)))
-           (defn read [this] (stream-read (:reader this)))
-           (defn write [this msg] (stream-write (:writer this) msg))
+(defn close [this] (.close (:socket this)))
+(defn read [this] (stream-read (:reader this)))
+(defn write [this msg] (stream-write (:writer this) msg))
 
 
-           (defn protocol-case 
-             ([beanstalk expected handle-response]
-              (let [reply (parse-reply (read beanstalk))]
-                (beanstalk-debug (str "* <= " reply))
-                (protocol-response beanstalk reply expected handle-response)))
-             ([beanstalk cmd-str data expected handle-response]
-              (do (write beanstalk cmd-str)
-                (write beanstalk data)
-                (protocol-case beanstalk expected handle-response)))
-             ([beanstalk cmd-str expected handle-response]
-              (do (write beanstalk cmd-str)
-                (protocol-case beanstalk expected handle-response))))
-           
+(defn protocol-case 
+ ([beanstalk expected handle-response]
+  (let [reply (parse-reply (read beanstalk))]
+    (beanstalk-debug (str "* <= " reply))
+    (protocol-response beanstalk reply expected handle-response)))
+ ([beanstalk cmd-str data expected handle-response]
+  (do (write beanstalk cmd-str)
+    (write beanstalk data)
+    (protocol-case beanstalk expected handle-response)))
+ ([beanstalk cmd-str expected handle-response]
+  (do (write beanstalk cmd-str)
+    (protocol-case beanstalk expected handle-response))))
 
-           (defn stats [this] 
-                  (protocol-case 
-                    this 
-                    (beanstalk-cmd :stats) 
-                    :ok 
-                    (fn [b r] {:payload (read b)})))
-            (defn stats-tube [this tube] 
-                  (protocol-case 
-                    this 
-                    (beanstalk-cmd :stats-tube tube) 
-                    :ok 
-                    (fn [b r] {:payload (read b)})))
-           (defn put [this pri del ttr length data] 
-                (protocol-case 
-                  this 
-                  (beanstalk-cmd :put pri del ttr length)
-                  (beanstalk-data data)
-                  :inserted
-                  (fn [b r] {:id (Integer. (:data r))})))
-           (defn use [this tube] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :use tube)
-                  :using
-                  (fn [b r] (let [tube (:data r)] {:payload tube :tube tube}))))
-           (defn watch [this tube] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :watch tube)
-                  :watching
-                  (fn [b r] {:count (Integer. (:data r))}))) 
-           (defn reserve [this] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :reserve)
-                  :reserved
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
-           (defn reserve-with-timeout [this timeout] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :reserve-with-timeout timeout)
-                  :reserved
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
-           (defn delete [this id] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :delete id)
-                  :deleted
-                  (fn [b r] true)))
-           (defn release [this id pri del] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :release id pri del)
-                  :released
-                  (fn [b r] true)))
-           (defn bury [this id pri] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :bury id pri)
-                  :buried
-                  (fn [b r] true)))
-           (defn touch [this id] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :touch id)
-                  :touched
-                  (fn [b r] true)))
-           (defn ignore [this tube] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :ignore tube)
-                  :watching
-                  (fn [b r] {:count (Integer. (:data r))}))) 
-           (defn peek [this id] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :peek id)
-                  :found
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
-           (defn peek-ready [this] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :peek-ready)
-                  :found
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
-           (defn peek-delayed [this] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :peek-delayed)
-                  :found
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
-           (defn peek-buried [this] 
-                (protocol-case 
-                  this
-                  (beanstalk-cmd :peek-buried)
-                  :found
-                  (fn [b r] {:payload (read b) 
-                             ; response is "<id> <length>"
-                             :id (Integer. (first (split (:data r) #"\s+")) )})))
 
-           
+(defn stats [this] 
+      (protocol-case 
+        this 
+        (beanstalk-cmd :stats) 
+        :ok 
+        (fn [b r] {:payload (read b)})))
+(defn stats-tube [this tube] 
+      (protocol-case 
+        this 
+        (beanstalk-cmd :stats-tube tube) 
+        :ok 
+        (fn [b r] {:payload (read b)})))
+(defn stats-job [this id]
+     (protocol-case
+       this
+       (beanstalk-cmd :stats-job id)
+       :ok
+       (fn [b r] {:payload (read b)})))
+(defn put [this pri del ttr length data] 
+    (protocol-case 
+      this 
+      (beanstalk-cmd :put pri del ttr length)
+      (beanstalk-data data)
+      :inserted
+      (fn [b r] {:id (Integer. (:data r))})))
+(defn use [this tube] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :use tube)
+      :using
+      (fn [b r] (let [tube (:data r)] {:payload tube :tube tube}))))
+(defn watch [this tube] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :watch tube)
+      :watching
+      (fn [b r] {:count (Integer. (:data r))}))) 
+(defn reserve [this] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :reserve)
+      :reserved
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn reserve-with-timeout [this timeout] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :reserve-with-timeout timeout)
+      :reserved
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn delete [this id] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :delete id)
+      :deleted
+      (fn [b r] true)))
+(defn release [this id pri del] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :release id pri del)
+      :released
+      (fn [b r] true)))
+(defn bury [this id pri] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :bury id pri)
+      :buried
+      (fn [b r] true)))
+(defn touch [this id] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :touch id)
+      :touched
+      (fn [b r] true)))
+(defn ignore [this tube] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :ignore tube)
+      :watching
+      (fn [b r] {:count (Integer. (:data r))}))) 
+(defn peek [this id] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :peek id)
+      :found
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn peek-ready [this] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :peek-ready)
+      :found
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn peek-delayed [this] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :peek-delayed)
+      :found
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn peek-buried [this] 
+    (protocol-case 
+      this
+      (beanstalk-cmd :peek-buried)
+      :found
+      (fn [b r] {:payload (read b) 
+                 ; response is "<id> <length>"
+                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+(defn pause-tube [this name timeout]
+    (protocol-case
+      this
+      (beanstalk-cmd :pause-tube name timeout)
+      :paused
+      (fn [b r] true)))
+
+(defn kick [this bound]
+  (protocol-case
+    this
+    (beanstalk-cmd :kick bound)
+    :kicked
+    (fn [b r] {:count (Integer. (:data r))})))           
                     
+(defn list-tubes [this]
+  (protocol-case
+    this
+    (beanstalk-cmd :list-tubes)
+    :ok
+    (fn [b r] {:payload (read b)})))
+
+(defn list-tube-used [this]
+  (protocol-case
+    this
+    (beanstalk-cmd :list-tube-used)
+    :using
+    (fn [b r] (let [tube (:data r)] {:payload tube :tube tube}))))
+
+(defn list-tubes-watched [this]
+  (protocol-case
+    this
+    (beanstalk-cmd :list-tubes-watched)
+    :ok
+    (fn [b r] {:payload (read b)})))
 
 (defn new-beanstalk
   ([host port] (let [s (java.net.Socket. host port)]
