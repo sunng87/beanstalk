@@ -4,6 +4,7 @@
         [clojure.string :only [split lower-case]]
         [clojure.pprint :only [pprint]]
         [clojure.java.io])
+  (:require [clj-yaml.core :as yaml])
   (import [java.io BufferedReader]))
 
 
@@ -102,19 +103,25 @@
         this 
         (beanstalk-cmd :stats) 
         :ok 
-        (fn [b r] {:payload (read b)})))
+        (fn [b r] 
+          (let [results (read b)]
+            {:payload results :stats (yaml/parse-string results)}))))
 (defn stats-tube [this tube] 
       (protocol-case 
         this 
         (beanstalk-cmd :stats-tube tube) 
         :ok 
-        (fn [b r] {:payload (read b)})))
+        (fn [b r] 
+          (let [results (read b)]
+            {:payload results :stats (yaml/parse-string results)}))))
 (defn stats-job [this id]
      (protocol-case
        this
        (beanstalk-cmd :stats-job id)
        :ok
-       (fn [b r] {:payload (read b)})))
+       (fn [b r] 
+          (let [results (read b)]
+            {:payload results :stats (yaml/parse-string results)}))))
 (defn put [this pri del ttr length data] 
     (protocol-case 
       this 
@@ -231,7 +238,9 @@
     this
     (beanstalk-cmd :list-tubes)
     :ok
-    (fn [b r] {:payload (read b)})))
+    (fn [b r] 
+      (let [results (read b)]
+        {:payload results :tubes (yaml/parse-string results)}))))
 
 (defn list-tube-used [this]
   (protocol-case
@@ -245,7 +254,9 @@
     this
     (beanstalk-cmd :list-tubes-watched)
     :ok
-    (fn [b r] {:payload (read b)})))
+    (fn [b r] 
+      (let [results (read b)]
+        {:payload results :tubes (yaml/parse-string results)}))))
 
 (defn new-beanstalk
   ([host port] (let [s (java.net.Socket. host port)]
