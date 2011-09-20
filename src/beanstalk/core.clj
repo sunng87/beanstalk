@@ -46,18 +46,14 @@
     (.write *crlf*)
     (.flush)))
 
-
+;;TODO a better read
 (defn stream-read [r]
   (let [sb (StringBuilder.)]
-    (loop [c (.read r)]
-      (cond 
-        (neg? c) (str sb)
-        (and (= \newline (char c)) 
-             (> (.length sb) 1) 
-             (= (char (.charAt sb (- (.length sb) 1) )) \return))
-              (str (.substring sb 0 (- (.length sb) 1)))
-        true (do (.append sb (char c))
-               (recur (.read r)))))))
+    (loop [line (.readLine r)]
+      (if (or (nil? line) (.endsWith line "\r\n"))
+        (str sb)
+        (do (.append sb line)
+               (recur (.readLine r)))))))
 
 
 ; handler => (fn [beanstalk reply] {:payload (read beanstalk)})
