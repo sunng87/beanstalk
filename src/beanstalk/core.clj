@@ -4,8 +4,7 @@
         [clojure.string :only [split lower-case]]
         [clojure.pprint :only [pprint]]
         [clojure.java.io])
-  (:require [clj-yaml.core :as yaml])
-  (import [java.io BufferedReader]))
+  (:require [clj-yaml.core :as yaml]))
 
 
 ;(use 'clojure.contrib.condition)
