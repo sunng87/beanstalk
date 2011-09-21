@@ -7,7 +7,6 @@
   (:require [clj-yaml.core :as yaml])
   (import [java.io BufferedReader]))
 
-
 ;(use 'clojure.contrib.condition)
 ;(use 'clojure.string)
 ;(use 'clojure.java.io)
@@ -41,14 +40,14 @@
       {:response response :data (reduce #(str %1 " " %2) (rest parts))})))
 
 
-(defn stream-write [w msg]
+(defn stream-write [^java.io.Writer w msg]
   (beanstalk-debug (str "* => " msg))
   (doto w (.write msg) 
     (.write *crlf*)
     (.flush)))
 
 
-(defn stream-read [r]
+(defn stream-read [^java.io.Reader r]
   (let [sb (StringBuilder.)]
     (loop [c (.read r)]
       (cond 
@@ -128,7 +127,7 @@
       (beanstalk-cmd :put pri del ttr length)
       (beanstalk-data data)
       :inserted
-      (fn [b r] {:id (Integer. (:data r))})))
+      (fn [b r] {:id (Integer. ^String (:data r))})))
 (defn use [this tube] 
     (protocol-case 
       this
@@ -140,7 +139,7 @@
       this
       (beanstalk-cmd :watch tube)
       :watching
-      (fn [b r] {:count (Integer. (:data r))}))) 
+      (fn [b r] {:count (Integer. ^String (:data r))}))) 
 (defn reserve [this] 
     (protocol-case 
       this
@@ -148,7 +147,7 @@
       :reserved
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn reserve-with-timeout [this timeout] 
     (protocol-case 
       this
@@ -156,7 +155,7 @@
       :reserved
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn delete [this id] 
     (protocol-case 
       this
@@ -186,7 +185,7 @@
       this
       (beanstalk-cmd :ignore tube)
       :watching
-      (fn [b r] {:count (Integer. (:data r))}))) 
+      (fn [b r] {:count (Integer. ^String (:data r))}))) 
 (defn peek [this id] 
     (protocol-case 
       this
@@ -194,7 +193,7 @@
       :found
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn peek-ready [this] 
     (protocol-case 
       this
@@ -202,7 +201,7 @@
       :found
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn peek-delayed [this] 
     (protocol-case 
       this
@@ -210,7 +209,7 @@
       :found
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn peek-buried [this] 
     (protocol-case 
       this
@@ -218,7 +217,7 @@
       :found
       (fn [b r] {:payload (read b) 
                  ; response is "<id> <length>"
-                 :id (Integer. (first (split (:data r) #"\s+")) )})))
+                 :id (Integer. ^String (first (split (:data r) #"\s+")) )})))
 (defn pause-tube [this name timeout]
     (protocol-case
       this
@@ -231,7 +230,7 @@
     this
     (beanstalk-cmd :kick bound)
     :kicked
-    (fn [b r] {:count (Integer. (:data r))})))           
+    (fn [b r] {:count (Integer. ^String (:data r))})))           
                     
 (defn list-tubes [this]
   (protocol-case
@@ -259,7 +258,7 @@
         {:payload results :tubes (yaml/parse-string results)}))))
 
 (defn new-beanstalk
-  ([host port] (let [s (java.net.Socket. host port)]
+  ([host port] (let [s (java.net.Socket. ^String host ^Integer port)]
                 {:socket s :reader (reader s) :writer (writer s)}))
   ([port]      (new-beanstalk "localhost" port))
   ([]          (new-beanstalk "localhost" 11300)))
