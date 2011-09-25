@@ -1,7 +1,6 @@
 (ns beanstalk.core
   (:refer-clojure :exclude [read peek use])
-  (:use [clojure.contrib.condition :only [raise]]
-        [clojure.string :only [split lower-case]]
+  (:use [clojure.string :only [split lower-case]]
         [clojure.pprint :only [pprint]]
         [clojure.java.io])
   (:require [clj-yaml.core :as yaml]))
@@ -11,8 +10,8 @@
 ;(use 'clojure.java.io)
 ;(import '[java.io BufferedReader])
 
-(def *debug* false)
-(def *crlf* (str \return \newline))
+(def ^:dynamic *debug* false)
+(def ^:dynamic *crlf* (str \return \newline))
 
 
 (defn beanstalk-debug [msg]
@@ -45,14 +44,20 @@
     (.write *crlf*)
     (.flush)))
 
-(defn stream-read [^java.io.Reader r]
+(defn stream-read [r]
   (let [sb (StringBuilder.)]
-    (loop [line (.readLine r)]
-      (if (or (nil? line) (.endsWith line "\r\n"))
-        (str sb)
-        (do (.append sb line)
-               (recur (.readLine r)))))))
+    (loop [c (.read r)]
+      (cond
+        (neg? c) (str sb)
+        (and (= \newline (char c))
+             (> (.length sb) 1)
+             (= (char (.charAt sb (- (.length sb) 1) )) \return))
+              (str (.substring sb 0 (- (.length sb) 1)))
+        true (do (.append sb (char c))
+               (recur (.read r)))))))
 
+(defn raise [message]
+  (throw (IllegalStateException. message)))
 
 ; handler => (fn [beanstalk reply] {:payload (read beanstalk)})
 ; handler => (fn [beanstalk reply] {:payload (read beanstalk) :id (Integer.  (:data reply))})
@@ -60,16 +65,10 @@
        (condp = (:response reply)
          expected (handler beanstalk reply)
          ; under what conditions do we retry?
-         :expected_crlf (raise 
-                          :type :expected_crlf
-                          :message (str "Protocol error. No CRLF."))
-         :not_found (raise 
-                      :type :not_found
-                      :message (str "Job not found."))
+         :expected_crlf (raise (str "Protocol error. No CRLF."))
+         :not_found (raise (str "Job not found."))
          :not_ignored false
-         (raise 
-           :type :protocol
-           :message (str "Unexpected response from sever: " (:response reply)))))
+         (raise (str "Unexpected response from sever: " (:response reply)))))
 
 
 (defn close [this] (.close (:socket this)))
