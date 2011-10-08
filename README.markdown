@@ -19,7 +19,14 @@ Refactored by bengl3rt
     user=> (def job (reserve b)) ; id is (:id job), payload is (:payload job)
 
 ## Installation
-	[org.clojars.sunng/beanstalk "1.0.4"]
+
+For clojure 1.2 projects:
+
+    [org.clojars.sunng/beanstalk "1.0.5"]
+
+For clojure 1.3 projects:
+
+     [org.clojars.sunng/beanstalk "1.0.6"]
 
 ## Examples
 
