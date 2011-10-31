@@ -26,7 +26,7 @@ For clojure 1.2 projects:
 
 For clojure 1.3 projects:
 
-     [org.clojars.sunng/beanstalk "1.0.6"]
+    [org.clojars.sunng/beanstalk "1.0.6"]
 
 ## Examples
 
@@ -43,6 +43,7 @@ Two examples are provided:
 ## License
 
 Copyright (c) 2010 Damon Snyder 
+Copyright (c) 2011 Sun Ning
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
